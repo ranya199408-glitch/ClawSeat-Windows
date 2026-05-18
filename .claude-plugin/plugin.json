@@ -1,0 +1,7 @@
+{
+  "name": "ClawSeat",
+  "description": "ClawSeat product bundle for OpenClaw and Claude-compatible runtimes",
+  "skills": [
+    "core/skills"
+  ]
+}

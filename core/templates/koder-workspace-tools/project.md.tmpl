@@ -1,0 +1,80 @@
+# TOOLS/project.md — 项目管理
+
+## 项目（project）锚定
+
+你可以**同时管理多个项目**。每个项目：
+- 有自己的 **profile TOML** (`~/.agents/profiles/{project}-profile-dynamic.toml`)
+- 有自己的 **tasks root** (`~/.agents/tasks/{project}/`) — TODO/DELIVERY/handoff 全在这
+- 有自己的 **workspace root** (`~/.agents/workspaces/{project}/`) — 每个 seat 一个子目录
+- 有自己的 **feishu group** — 团队协作的独立通信通道
+- 拉起**独立的 planner/builder/reviewer/...** 一套团队
+
+每个 koder workspace 通过其 `WORKSPACE_CONTRACT.toml` 的 `project` 字段绑定到一个具体项目（install / cartooner / mor / 等）。
+
+## 你当前所在的项目
+
+读你自己 workspace 的 `WORKSPACE_CONTRACT.toml` 的 `project` 字段：
+
+```bash
+{{contract_snippet}}
+```
+
+## 新建项目（用户让你启动新团队时）
+
+**准备工作（问用户）：**
+1. 项目名（英文短名，作 profile / tasks_root / session 的路径锚定）
+2. 项目描述（给 PROJECT.md）
+3. **让用户手动在飞书里建一个新群**，把群 ID（`oc_xxx`）复制给你
+   - 你不要尝试程序化建群，lark-cli 不支持
+4. 和用户简单讨论后**选定 template**（默认 `full-team.toml`，6 seats）：
+
+   | 模板 | 包含 |
+   |------|------|
+   | full-team.toml（推荐） | koder + planner + builder-1 + reviewer-1 + qa-1 + designer-1 |
+   | install-openclaw.toml（OpenClaw 默认） | koder(frontstage) + memory + planner + builder-1 + reviewer-1 |
+   | install.toml（本地 /cs 轻量） | koder + planner + builder-1 + reviewer-1 |
+   | starter.toml（起点） | 仅 koder，后续手动加 seat |
+
+**执行步骤：**
+
+```bash
+# 1. 复制 profile 模板并 patch 项目名
+cp {{clawseat_root}}/examples/starter/profiles/full-team.toml \
+   ~/.agents/profiles/<new-project>-profile-dynamic.toml
+# 用 sed 把所有 "my-project" 换成新名字，并补上 feishu_group_id
+
+# 2. Bootstrap 新项目
+python3 {{scripts}}/bootstrap_harness.py \
+  --profile ~/.agents/profiles/<new-project>-profile-dynamic.toml \
+  --project-name <new-project>
+
+# 3. 绑定 feishu group 到 project
+python3 -c "
+import sys
+sys.path.insert(0, '{{clawseat_root}}/shells/openclaw-plugin')
+from _bridge_binding import bind_project_to_group
+bind_project_to_group(
+    project='<new-project>',
+    group_id='<oc_xxx 用户给的>',
+    account_id='main',
+    session_key='<project>-setup',
+    bound_by='{{heartbeat_owner}}',
+    authorized=True,
+)
+"
+
+# 4. 拉起新项目的 planner（按 TOOLS/seat.md 的配置收集 SOP 先和用户确认 tool/auth/provider）
+# 5. dispatch 工作给 planner（见 TOOLS/dispatch.md）
+```
+
+## 项目间隔离原则
+
+- **seat 间的 dispatch/DELIVERY/handoff 都是 project-scoped**：planner-A 不能 dispatch 给 builder-B
+- **Memory CC 是全局单实例**，所有项目共享同一份知识库 `~/.agents/memory/*.json`
+- **你自己（koder）是唯一跨项目角色**，可同时持有多个项目的 frontstage 控制权
+
+## 常见错误（一定不要犯）
+
+- 不要跳过 `--project-name` 直接跑 bootstrap_harness —— 会默认写到 `my-project` 污染它
+- 不要把 install 项目的 profile 拷贝给新项目再改 —— 用 examples/starter/ 下的模板
+- 不要用同一个 feishu group 绑两个项目 —— BRIDGE.toml 是 1:1 关系

@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/clawseat/v2/decision-payload.schema.json",
+  "title": "ClawSeat Decision Payload v1",
+  "description": "Cross-seat decision escalation contract per RFC-002 §6. Used by planner→memory (escalation), memory→koder (Feishu render), koder→memory (user reply translation).",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "from_seat",
+    "to_seat",
+    "severity",
+    "category",
+    "context",
+    "options",
+    "default_if_timeout",
+    "timeout_minutes",
+    "created_at"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID v4. Used by koder to relate user reply back to original decision."
+    },
+    "from_seat": {
+      "type": "string",
+      "pattern": "^([a-z0-9-]+-)?(memory|planner|builder|designer|koder)$",
+      "description": "Originating seat id (e.g. 'install-planner', 'arena-memory', 'machine-memory')."
+    },
+    "to_seat": {
+      "type": "string",
+      "pattern": "^([a-z0-9-]+-)?(memory|planner|builder|designer|koder)$",
+      "description": "Target seat id."
+    },
+    "issue_id": {
+      "type": "string",
+      "pattern": "^(#[0-9]+|NEW)$",
+      "description": "Backlog issue reference, or 'NEW' if not yet filed."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["BLOCKER", "HIGH", "MEDIUM", "LOW"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["breaking", "secret", "merge", "skill", "preference", "scope"],
+      "description": "Per RFC-002 §5 escalation criteria. Determines whether memory must escalate to koder→Feishu (always for these 6) vs decide locally (any other context)."
+    },
+    "context": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "≤200 字 (Chinese) problem statement. Plain language, not jargon."
+    },
+    "options": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "impact"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z]$",
+            "description": "Single uppercase letter A-F."
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "description": "Short button label for Feishu card."
+          },
+          "impact": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "One-line consequence description."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "default_if_timeout": {
+      "type": "string",
+      "description": "Either an option id ('A'-'F'), 'wait' (extend timeout), or 'abort' (cancel decision)."
+    },
+    "timeout_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1440,
+      "description": "Minutes before default_if_timeout triggers."
+    },
+    "supporting_docs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Absolute or ~-prefixed file path. koder reads these to render context-rich Feishu card."
+      },
+      "default": []
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of payload creation."
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set by koder when user responds OR by timeout handler."
+    },
+    "decided_by": {
+      "type": "string",
+      "description": "'operator' (user clicked) | 'timeout' (default fired) | 'memory' (self-decided, only if category not in §5 list)."
+    },
+    "chosen_option_id": {
+      "type": "string",
+      "pattern": "^[A-F]$",
+      "description": "Set when decided. Must match one of options[].id."
+    },
+    "free_text_reply": {
+      "type": "string",
+      "description": "If user used '我有别的想法' button OR free-typed Feishu reply. koder translates to agent prompt."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,170 @@
+version = 1
+template_name = "clawseat-engineering"
+description = "Engineering v2 roster: memory orchestrates planner, codex builder, reviewer (QA + visual review), and patrol. reviewer merges diff review, browser QA testing, and visual consistency checks."
+
+[window_layout]
+shared_memories_window_title = "clawseat-memories"
+workers_window_title = "clawseat-{PROJECT}-workers"
+
+[window_layout.workers_grid]
+left_main_seat = "planner"
+left_main_width = "50%"
+right_seats = ["builder", "reviewer", "patrol"]
+right_fill_order = "col-major"
+
+[defaults]
+home_mode = "real"
+dangerously_skip_permissions = true
+window_mode = "split-2"
+monitor_max_panes = 5
+open_detail_windows = false
+workspace_tools = [
+  "TOOLS/memory.md",
+]
+
+[[engineers]]
+id = "memory"
+display_name = "Memory"
+role = "project-memory"
+window = "memory"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+monitor = true
+human_facing = true
+active_loop_owner = false
+dispatch_authority = true
+patrol_authority = true
+unblock_authority = true
+escalation_authority = true
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-memory/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-decision-escalation/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/memory-oracle/SKILL.md",
+]
+role_details = [
+  "project memory hub; owns project context, dispatch, escalation, and Phase-A coordination",
+]
+
+[[engineers]]
+id = "planner"
+display_name = "planner"
+role = "planner-dispatcher"
+window = "workers"
+window_pane = "left-main"
+tool = "claude"
+auth_mode = "api"
+provider = "deepseek"
+model = "deepseek-v4-pro[1M]"
+monitor = true
+human_facing = false
+active_loop_owner = true
+dispatch_authority = true
+patrol_authority = false
+unblock_authority = false
+escalation_authority = true
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/planner/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "engineering planner: owns task planning, dispatch, and chain-level delivery",
+  "dispatches builder, reviewer, and patrol according to project.toml",
+]
+
+[[engineers]]
+id = "builder"
+display_name = "builder"
+role = "code-builder"
+window = "workers"
+window_pane = "top-right"
+tool = "codex"
+auth_mode = "oauth"
+provider = "openai"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/builder/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "implementation seat powered by Codex; edits code, scripts, config, docs, and tests",
+  "receives TODO from planner and returns DELIVERY.md with verification evidence",
+]
+
+[[engineers]]
+id = "reviewer"
+display_name = "reviewer"
+role = "code-reviewer"
+window = "workers"
+window_pane = "middle-left"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = true
+design_authority = true
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/reviewer/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "independent code/QA/visual review gate; browser QA testing, visual consistency check, diff review; emits Verdict before planner accepts delivery",
+]
+
+[[engineers]]
+# legacy patrol alias removed 2026-04-29
+id = "patrol"
+display_name = "patrol"
+role = "patrol"
+window = "workers"
+window_pane = "middle-right"
+tool = "claude"
+auth_mode = "api"
+provider = "minimax"
+model = "MiniMax-M2.7-highspeed"
+base_url = "https://api.minimaxi.com/anthropic"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = true
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/patrol/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "test-execution and patrol seat; runs verification and reports evidence without modifying code",
+]

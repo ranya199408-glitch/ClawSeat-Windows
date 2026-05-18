@@ -1,0 +1,21 @@
+# TOOLS/install.md — 安装 / 更新 / 环境检查
+
+## 环境检查
+
+```bash
+python3 {{clawseat_root}}/core/preflight.py <project>
+python3 {{clawseat_root}}/core/scripts/skill_manager.py check
+bash {{shell}}/wait-for-text.sh -t <session> -p "pattern" -T <timeout>
+```
+
+## 首次安装
+
+v0.7+ 以 `scripts/install.sh` 为唯一安装 SSOT。安装代理先完成环境扫描、
+runtime 选择、validated profile / binding 写入，再拉起 project-memory。
+memory 接手后再按当前 profile 拉起项目席位。
+
+## 更新后刷新所有 workspace（git pull 之后必须跑，零参数自动检测）
+
+```bash
+python3 {{clawseat_root}}/core/skills/clawseat-install/scripts/refresh_workspaces.py
+```

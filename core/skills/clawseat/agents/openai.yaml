@@ -1,0 +1,7 @@
+interface:
+  display_name: "ClawSeat"
+  short_description: "Canonical ClawSeat product entrypoint for OpenClaw, Feishu, Claude Code, and Codex"
+  default_prompt: "Use $clawseat as the canonical ClawSeat entrypoint. In OpenClaw or Feishu environments, route through the OpenClaw plugin/bootstrap path and run the full install/bootstrap/configure/verify flow. In local Claude/Codex runtimes, install the local entry skills first and treat /cs only as a convenience alias."
+
+policy:
+  allow_implicit_invocation: true

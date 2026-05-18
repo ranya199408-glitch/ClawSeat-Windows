@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# inject_memory.sh — UserPromptSubmit hook for Memory CC
+# Deployed by init_koder.py to <memory-workspace>/.claude/hooks/inject_memory.sh
+#
+# Injects ONLY: privacy (credentials/network/openclaw/github) + current_context
+#               + current project dev_env.
+# Hard limit: 40 960 bytes.  Never injects decision/finding/library_knowledge content.
+#
+# Placeholder __MEMORY_ROOT__ is replaced with the real absolute path at deploy time.
+set -euo pipefail
+
+MEMORY_ROOT="__MEMORY_ROOT__"
+MACHINE="$MEMORY_ROOT/machine"
+MAX_BYTES=40960
+
+cat_file() {
+    local label="$1" path="$2"
+    [ -f "$path" ] || return 0
+    printf '\n### %s\n' "$label"
+    cat "$path"
+}
+
+{
+  cat_file "credentials"    "$MACHINE/credentials.json"
+  cat_file "network"        "$MACHINE/network.json"
+  cat_file "openclaw"       "$MACHINE/openclaw.json"
+  cat_file "github"         "$MACHINE/github.json"
+  cat_file "current_context" "$MACHINE/current_context.json"
+
+  # Inject current project dev_env when the project pointer is set
+  if [ -f "$MACHINE/current_context.json" ]; then
+    PROJECT=$(python3 -c \
+      "import json; d=json.load(open('$MACHINE/current_context.json')); print(d.get('current_project') or '')" \
+      2>/dev/null || true)
+    if [ -n "$PROJECT" ]; then
+      cat_file "dev_env ($PROJECT)" "$MEMORY_ROOT/projects/$PROJECT/dev_env.json"
+    fi
+  fi
+} | head -c "$MAX_BYTES"

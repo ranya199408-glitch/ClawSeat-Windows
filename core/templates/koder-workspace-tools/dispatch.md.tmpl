@@ -1,0 +1,94 @@
+# TOOLS/dispatch.md — 派发 / 交接 / 通知
+
+> 行为约束（永远 dispatch 给 planner 不直接找 specialist）在 SOUL.md。
+> **user-intent → gstack skill 映射规则（硬责任）也在 SOUL.md 第 5 条**。
+> 本文档只列命令形状 + intent 映射表。
+
+## 派发任务（推荐用 `--intent` 自动注入 gstack skill 触发）
+
+```bash
+python3 {{scripts}}/dispatch_task.py \
+  --profile <profile.toml 路径> \
+  --source koder --target planner \
+  --task-id <TASK-ID> \
+  --title "<任务标题>" \
+  --objective "<用户原话或你澄清后的描述>" \
+  --intent <intent-key>          # ← 关键：自动注入 trigger 词 + skill-refs
+```
+
+对 koder 来说：`--source koder --target planner` 是唯一合法组合（见 SOUL.md）。
+
+### intent 映射表（user 口语化需求 → --intent 选哪个）
+
+| 用户的说法（示例） | `--intent` | 自动激活的 gstack skill |
+|---|---|---|
+| "做个工程审查" / "架构靠谱吗" / "锁定计划" | `eng-review` | `gstack-plan-eng-review` |
+| "做大一点" / "格局" / "Think bigger" | `ceo-review` | `gstack-plan-ceo-review` |
+| "设计怎么样" / "UX 评估" / "review design" | `design-review` | `gstack-plan-design-review` |
+| "API 审查" / "DX review" / "开发体验" | `devex-review` | `gstack-plan-devex-review` |
+| "推上去" / "ship" / "创 PR" / "deploy" | `ship` | `gstack-ship` |
+| "合到 main" / "上生产" / "canary" | `land` | `gstack-land-and-deploy` |
+| "排查 bug" / "为什么挂了" / "RCA" | `investigate` | `gstack-investigate` |
+| "脑暴" / "I have an idea" / "值不值得做" | `office-hours` | `gstack-office-hours` |
+| "checkpoint" / "where was I" / "保存进度" | `checkpoint` | `gstack-checkpoint` |
+| 纯规划/路由，不需要 gstack skill | **不传 --intent** | — |
+
+### 不靠 --intent 也行（fallback，手动写 objective + skill-refs）
+
+```bash
+python3 {{scripts}}/dispatch_task.py \
+  --profile ... --source koder --target planner --task-id T --title '...' \
+  --objective '**Review the architecture**, lock in the plan — 验收...' \
+  --skill-refs ~/.gstack/repos/gstack/.agents/skills/gstack-plan-eng-review/SKILL.md
+```
+
+要手动嵌 **trigger 词**（见每个 gstack skill 自己的 description）+ `--skill-refs` 绝对路径。**优先用 `--intent`**，它会替你做这两件事。
+
+## 完成交接（specialist → planner，或 planner → koder）
+
+```bash
+python3 {{scripts}}/complete_handoff.py \
+  --profile <profile.toml 路径> \
+  --source <完成方> \
+  --target <接收方> \
+  --task-id <TASK-ID> \
+  --title "<交付标题>" \
+  --summary "<交付摘要>"
+```
+
+## 发送通知（非任务性消息、提醒、unblock）
+
+```bash
+python3 {{scripts}}/notify_seat.py \
+  --profile <profile.toml 路径> \
+  --target <seat> \
+  --message "<消息内容>"
+```
+
+## 状态检查
+
+```bash
+python3 {{scripts}}/render_console.py --profile <profile.toml 路径>
+bash {{shell}}/check-engineer-status.sh <seat1> <seat2> ...
+bash {{shell}}/detect-prompt-state.sh <tmux-session-name>
+```
+
+## tmux 通信（仅用于非结构化消息，fallback 用）
+
+```bash
+bash {{shell}}/send-and-verify.sh --project <project> <seat> "message"
+```
+
+> 只用于 notify_seat.py 不可用时的 fallback。日常任务派发和交接 **禁止** 用这个。
+
+## Retry semantics（exit code 含义）
+
+dispatch_task.py / complete_handoff.py 的退出码有三种含义：
+
+| exit code | 含义 | koder 应对 |
+|---|---|---|
+| 0 | 正常完成 | 继续流程 |
+| 1 | 错误，需升级 | 排查原因，向用户汇报 |
+| 2 | 任务已存在（TASK_ALREADY_QUEUED）| **不重跑 dispatch**；仅用 send-and-verify 补发通知 |
+
+exit 2 时只需 re-send（notify），不重新 dispatch。重复 dispatch 同一 task_id 会被 guard 拦截并再次 exit 2。

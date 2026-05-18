@@ -1,0 +1,26 @@
+{
+  "_doc": "SSOT for cartooner-harness Authorization Matrix. Mirror of the table in SKILL.md §Skill Authorization Matrix. Used by patrol audit + the per-CLI seat_gate.{mjs,py} helpers. Each value is the list of seats authorized to invoke this skill's CLIs. Adding a new cartooner-* skill: add an entry here AND a `gate(...)` line at every CLI entry point.",
+  "_schema_version": 1,
+
+  "cartooner-harness": ["memory", "writer", "builder-image", "builder-av", "patrol"],
+  "cartooner": ["memory"],
+  "cartooner-resource-ops": ["memory", "patrol"],
+
+  "cartooner-script-development": ["writer"],
+  "viral-copywriter": ["writer"],
+
+  "cartooner-image": ["builder-image"],
+  "cartooner-storyboard": ["builder-image"],
+  "cartooner-design": ["builder-image"],
+  "nano-banana": ["builder-image"],
+  "gpt-image-2": ["builder-image"],
+
+  "cartooner-video": ["builder-av"],
+  "cartooner-audio": ["builder-av"],
+  "cartooner-prompt": ["builder-av"],
+  "cartooner-seedance-cookbook": ["builder-av"],
+  "cartooner-brand-logo-animation": ["builder-av"],
+
+  "remotion-video-production": ["builder-av"],
+  "remotion-delegation": ["builder-av"]
+}

@@ -1,0 +1,388 @@
+version = 1
+description = "ClawSeat skill registry — single source of truth for all skill dependencies"
+
+# ── Bundled skills (shipped with ClawSeat) ─────────────────────────
+
+[[skills]]
+name = "gstack-harness"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md"
+required = true
+roles = ["frontstage-supervisor", "planner-dispatcher", "builder", "reviewer", "patrol", "designer"]
+description = "Shared runtime: seat schema, dispatch/completion/ACK protocol, heartbeat, patrol"
+
+[[skills]]
+name = "clawseat-install"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/clawseat-install/SKILL.md"
+required = true
+roles = ["frontstage-supervisor", "planner-dispatcher"]
+description = "ClawSeat bootstrap and install coordination"
+
+[[skills]]
+name = "clawseat"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/clawseat/SKILL.md"
+required = false
+roles = []
+entry_skill = true
+description = "Product entrypoint skill for ClawSeat"
+
+[[skills]]
+name = "cs"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/cs/SKILL.md"
+required = false
+roles = []
+entry_skill = true
+description = "Local post-install convenience entrypoint"
+
+[[skills]]
+name = "clawseat-intake"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/clawseat-intake/SKILL.md"
+required = false
+roles = ["frontstage-supervisor", "planner-dispatcher"]
+description = "Structured requirement clarification via Socratic questioning before implementation"
+
+[[skills]]
+name = "workflow-architect"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/workflow-architect/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Planner-only workflow skeleton design: map structured briefs to reusable step specs and dispatch"
+
+[[skills]]
+name = "lark-shared"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/lark-shared/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Feishu/Lark CLI shared base: auth, config, identity"
+
+[[skills]]
+name = "lark-im"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/lark-im/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Feishu instant messaging: send/receive messages, manage groups"
+
+[[skills]]
+name = "tmux-basics"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md"
+required = false
+roles = ["frontstage-supervisor", "planner-dispatcher", "builder", "reviewer", "patrol"]
+description = "tmux session control: commands, ClawSeat wrappers, pitfalls, self-diagnosis"
+
+[[skills]]
+name = "memory-oracle"
+source = "bundled"
+path = "{CLAWSEAT_ROOT}/core/skills/memory-oracle/SKILL.md"
+required = false
+roles = ["memory-oracle"]
+description = "Environment memory oracle: scans the machine, builds structured knowledge DB at ~/.agents/memory/, answers queries"
+
+# ── Gstack external skills ─────────────────────────────────────────
+
+[[skills]]
+name = "gstack-careful"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md"
+required = false
+roles = ["frontstage-supervisor", "planner-dispatcher", "builder", "reviewer"]
+description = "Safety guardrails for destructive commands"
+
+[[skills]]
+name = "gstack-plan-eng-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-plan-eng-review/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Eng manager-mode plan review before dispatch"
+
+[[skills]]
+name = "gstack-ship"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-ship/SKILL.md"
+required = false
+roles = ["planner-dispatcher", "builder"]
+description = "Ship workflow: PR creation, merge, deploy"
+
+[[skills]]
+name = "gstack-investigate"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-investigate/SKILL.md"
+required = true
+roles = ["builder"]
+description = "Systematic debugging with root cause investigation"
+
+[[skills]]
+name = "gstack-browse"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md"
+required = false
+roles = ["builder", "reviewer", "patrol", "designer"]
+description = "Headless browser for QA testing and visual inspection"
+
+[[skills]]
+name = "gstack-freeze"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-freeze/SKILL.md"
+required = false
+roles = ["builder"]
+description = "Directory-scoped edit restriction"
+
+[[skills]]
+name = "gstack-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-review/SKILL.md"
+required = true
+roles = ["reviewer"]
+description = "Pre-landing PR review and canonical verdicts"
+
+[[skills]]
+name = "gstack-qa"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-qa/SKILL.md"
+required = true
+roles = ["patrol"]
+description = "Full QA testing with bug fixing"
+
+[[skills]]
+name = "gstack-qa-only"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-qa-only/SKILL.md"
+required = false
+roles = ["patrol"]
+description = "Report-only QA testing without fixing"
+
+[[skills]]
+name = "gstack-design-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-design-review/SKILL.md"
+required = true
+roles = ["designer"]
+description = "Visual QA and design corrections"
+
+[[skills]]
+name = "gstack-design-shotgun"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-design-shotgun/SKILL.md"
+required = false
+roles = ["designer"]
+description = "Multi-variant design exploration"
+
+[[skills]]
+name = "gstack-design-html"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-design-html/SKILL.md"
+required = false
+roles = ["designer"]
+description = "Production-quality HTML/CSS from approved designs"
+
+# ── Gstack extended skills (first batch) ───────────────────────────
+
+[[skills]]
+name = "gstack-office-hours"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-office-hours/SKILL.md"
+required = false
+roles = ["frontstage-supervisor"]
+description = "YC Office Hours: product diagnostic (startup mode) and design brainstorm (builder mode)"
+
+[[skills]]
+name = "gstack-plan-ceo-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-plan-ceo-review/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "CEO/founder-mode plan review: scope expansion/reduction, strategy challenge"
+
+[[skills]]
+name = "gstack-plan-design-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-plan-design-review/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Designer's eye plan review: rate design dimensions, fix UX gaps"
+
+[[skills]]
+name = "gstack-plan-devex-review"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-plan-devex-review/SKILL.md"
+required = false
+roles = ["planner-dispatcher"]
+description = "Developer experience plan review: DX scorecard, TTHW benchmarks"
+
+[[skills]]
+name = "gstack-unfreeze"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-unfreeze/SKILL.md"
+required = false
+roles = ["builder"]
+description = "Clear freeze boundary, allow edits to all directories"
+
+[[skills]]
+name = "gstack-land-and-deploy"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-land-and-deploy/SKILL.md"
+required = false
+roles = ["planner-dispatcher", "builder"]
+description = "Merge PR, wait for CI, verify production health via canary"
+
+[[skills]]
+name = "gstack-checkpoint"
+source = "gstack"
+path = "~/.gstack/repos/gstack/.agents/skills/gstack-checkpoint/SKILL.md"
+required = false
+roles = ["planner-dispatcher", "builder"]
+description = "Save and resume working state checkpoints across sessions"
+
+# ── OpenClaw migrated skills (2026-04-28) ──────────────────────────
+
+[[skills]]
+name = "find-skills"
+source = "openclaw-migrated"
+path = "~/.agents/skills/find-skills/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Search and discover available agent skills from ClawHub and local installs"
+
+[[skills]]
+name = "agent-reach"
+source = "openclaw-migrated"
+path = "~/.agents/skills/agent-reach/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Search and read public web, social, video, and repository sources"
+
+[[skills]]
+name = "cartooner-artisan"
+source = "openclaw-migrated"
+path = "~/.agents/skills/cartooner-artisan/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Persist Cartooner creative assets with metadata"
+
+[[skills]]
+name = "cartooner-browser"
+source = "openclaw-migrated"
+path = "~/.agents/skills/cartooner-browser/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Control Cartooner inspiration browser through OpenClaw browser tooling"
+
+[[skills]]
+name = "cartooner-resource-ops"
+source = "openclaw-migrated"
+path = "~/.agents/skills/cartooner-resource-ops/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Operate Cartooner project and asset files deterministically"
+
+[[skills]]
+name = "cartooner-video"
+source = "openclaw-migrated"
+path = "~/.agents/skills/cartooner-video/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Create and manage Cartooner video workflows"
+
+[[skills]]
+name = "remotion-delegation"
+source = "openclaw-migrated"
+path = "~/.agents/skills/remotion-delegation/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Delegate Remotion animation implementation and verify renders"
+
+[[skills]]
+name = "remotion-video-production"
+source = "openclaw-migrated"
+path = "~/.agents/skills/remotion-video-production/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Produce programmable Remotion videos from React frame logic"
+
+[[skills]]
+name = "storyboard-forge"
+source = "openclaw-migrated"
+path = "~/.agents/skills/storyboard-forge/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Plan and route multi-panel storyboard image generation"
+
+[[skills]]
+name = "storyboard-expert"
+source = "openclaw-migrated"
+path = "~/.agents/skills/storyboard-expert/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Persist storyboard frames and manifests into project workspaces"
+
+[[skills]]
+name = "script-analyst"
+source = "openclaw-migrated"
+path = "~/.agents/skills/script-analyst/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Analyze scripts into structured production and storyboard inputs"
+
+[[skills]]
+name = "script-writing-expert"
+source = "openclaw-migrated"
+path = "~/.agents/skills/script-writing-expert/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Persist generated Fountain scripts into the narrative workspace"
+
+[[skills]]
+name = "viral-copywriter"
+source = "openclaw-migrated"
+path = "~/.agents/skills/viral-copywriter/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Write high-density Chinese viral social copy with fact checks"
+
+[[skills]]
+name = "nano-banana"
+source = "openclaw-migrated"
+path = "~/.agents/skills/nano-banana/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Guide Gemini Image API prompt engineering for Nano Banana models"
+
+[[skills]]
+name = "art-director-expert"
+source = "openclaw-migrated"
+path = "~/.agents/skills/art-director-expert/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Persist character design and turnaround assets into project workspaces"
+
+[[skills]]
+name = "pdf"
+source = "openclaw-migrated"
+path = "~/.agents/skills/pdf/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Read, edit, create, combine, split, OCR, and secure PDF files"
+
+[[skills]]
+name = "pptx"
+source = "openclaw-migrated"
+path = "~/.agents/skills/pptx/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Read, create, edit, combine, and inspect PowerPoint presentations"
+
+[[skills]]
+name = "xlsx"
+source = "openclaw-migrated"
+path = "~/.agents/skills/xlsx/SKILL.md"
+required = false
+roles = ["memory"]
+description = "Read, create, clean, transform, and write spreadsheet files"

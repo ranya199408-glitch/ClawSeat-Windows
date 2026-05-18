@@ -1,0 +1,4 @@
+interface:
+  display_name: "Socratic Requirements"
+  short_description: "Lightweight Feishu option questions."
+  default_prompt: "Use $clawseat-intake to clarify the request with concise Socratic option cards before execution."

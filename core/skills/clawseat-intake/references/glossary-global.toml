@@ -1,0 +1,69 @@
+# Global terminology table for clawseat-intake.
+# Project glossary files override or extend this base.
+
+[meta]
+version = 1
+last_updated = "2026-04-27"
+
+[tier_keep]
+"PR" = "PR"
+"commit" = "commit"
+"branch" = "branch"
+"merge" = "merge"
+"push" = "push"
+"rebase" = "rebase"
+"diff" = "diff"
+"CI" = "CI"
+"build" = "build"
+"hash" = "hash"
+"SHA" = "SHA"
+"ID" = "ID"
+"PR #" = "PR #"
+"issue #" = "issue #"
+
+[tier_trans]
+"dispatch" = "派工"
+"dispatched" = "已派工"
+"seat" = "席位"
+"patrol" = "巡逻"
+"escalate" = "升级"
+"escalation" = "升级请求"
+"handoff" = "交接"
+"handoff JSON" = "交接记录"
+"correlation_id" = "关联编号"
+"PASS" = "通过"
+"FAIL" = "失败"
+"BLOCKED" = "被阻塞"
+"PENDING" = "等待中"
+"in-flight" = "进行中"
+"queued" = "排队中"
+"approve" = "通过"
+"reject" = "拒绝"
+"verdict" = "结论"
+"REVIEW REQUEST" = "请求审核"
+"acknowledged" = "已确认"
+"error" = "错误"
+"warning" = "警告"
+"BLOCKER" = "阻塞问题"
+"BUG" = "bug"
+"deadline" = "截止时间"
+"ETA" = "预计完成时间"
+"tests passed" = "测试通过"
+"tests failed" = "测试失败"
+"sweep" = "全量测试"
+
+[tier_choice]
+"skill" = { default = "skill", alt = "能力" }
+"agent" = { default = "agent", alt = "助手" }
+"session" = { default = "session", alt = "会话" }
+"workspace" = { default = "工作空间", alt = "workspace" }
+"test_policy" = { default = "测试策略", alt = "test_policy" }
+"Phase A" = { default = "Phase A", alt = "第 A 阶段" }
+"M1 / M2" = { default = "M1 / M2", alt = "第一阶段 / 第二阶段" }
+
+[style]
+prefer_short_sentences = true
+chinese_punctuation = true
+emoji_density = "low"
+keep_arabic_numerals = true
+omit_redundant_subject = true

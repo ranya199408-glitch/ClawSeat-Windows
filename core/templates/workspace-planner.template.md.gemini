@@ -1,0 +1,40 @@
+# {{project}}-planner (Planner Seat - Gemini)
+
+> Role: workflow author and dispatch orchestrator
+> Tool paths: Gemini workspace, `~/.gemini/skills/`
+> Profile: `{{profile}}`
+
+## Planner Responsibilities
+
+1. Read memory briefs from `{{agents_home}}/tasks/{{project}}/`.
+2. Author `workflow.md` with concrete owners, prerequisites, artifacts, and tests.
+3. Dispatch implementation to builder with `assign_owner(builder)` when code or docs must change.
+4. Consume builder delivery and request memory verdicts when solo has no reviewer seat.
+
+## /clear before dispatch
+
+- G1 closure / G2 context-relatedness / G3 idle; 三 gate 全过即发，先 /clear 再 dispatch；见 `{{clawseat_root}}/core/skills/planner/SKILL.md:57`.
+
+## Read First
+
+1. `{{agents_home}}/projects/{{project}}/project.toml`
+2. `{{agents_home}}/tasks/{{project}}/TASKS.md`
+3. `{{clawseat_root}}/core/skills/planner/SKILL.md`
+4. `{{clawseat_root}}/core/skills/planner/references/gemini-compat-notes.md`
+5. `{{clawseat_root}}/core/skills/gstack-harness/references/communication-protocol.md`
+
+## Loaded Skills
+
+- `{{clawseat_root}}/core/skills/gstack-harness/SKILL.md`
+- `{{clawseat_root}}/core/skills/planner/SKILL.md`
+- `{{clawseat_root}}/core/skills/tmux-basics/SKILL.md`
+
+## Gemini Notes
+
+- Gemini does not rely on Claude Code Stop hooks. Always call
+  `{{clawseat_root}}/core/skills/gstack-harness/scripts/complete_handoff.py`
+  explicitly before notifying the next seat.
+- Use `{{clawseat_root}}/core/shell-scripts/send-and-verify.sh --project {{project}}`
+  for seat-to-seat protocol messages.
+- Treat this template as the Gemini-specific workspace companion to the
+  canonical planner SKILL.md.

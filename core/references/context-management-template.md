@@ -1,0 +1,1 @@
+../skills/clawseat-memory/references/context-management-template.md

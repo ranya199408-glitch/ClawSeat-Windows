@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.clawseat.heartbeat.{project}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{CLAWSEAT_ROOT}/core/scripts/heartbeat_beacon.sh</string>
+    <string>{project}</string>
+  </array>
+  <key>StartInterval</key><integer>{cadence_seconds}</integer>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>{HOME}/.agents/heartbeat/{project}.log</string>
+  <key>StandardErrorPath</key><string>{HOME}/.agents/heartbeat/{project}.err</string>
+</dict>
+</plist>

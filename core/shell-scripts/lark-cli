@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# lark-cli wrapper for sandboxed seat runtimes.
+#
+# Problem: lark-cli stores user-identity auth tokens in macOS Keychain
+# with service-name keys derived from $HOME. Seats that run with a
+# sandboxed HOME (`~/.agent-runtime/identities/<tool>/<auth>/<seat>/home`)
+# cannot resolve the operator's tokens, even though the seat already
+# symlinks `~/.lark-cli/` to the real-home copy. The config files are
+# shared, but the Keychain lookup still points at the wrong namespace.
+#
+# Fix: transparently route lark-cli's HOME so both config and Keychain
+# resolve to the same namespace the launcher prepared.
+#
+# HOME-routing policy (in priority order):
+#
+#   1. `CLAWSEAT_PROJECT_TOOL_ROOT` — set by agent-launcher.sh only
+#      under `tools_isolation=per-project`. Points at
+#      `$REAL_HOME/.agent-runtime/projects/<project>/`. The sandbox
+#      seat already symlinks `~/.lark-cli/` there. Route HOME to the
+#      same root so Keychain lookup hits the per-project namespace
+#      (preserves `project init-tools` / `project switch-identity`
+#      contract; see tests/test_multi_identity_isolation.py).
+#
+#   2. `AGENT_HOME` — operator's real HOME. Under the default
+#      `tools_isolation=shared-real-home`, this is where Keychain
+#      entries live. Route HOME here so sandbox seats can reach the
+#      operator's personal lark-cli tokens.
+#
+#   3. Neither set (or equals current HOME) — pure pass-through.
+#
+# Source of truth: core/shell-scripts/lark-cli in CLAWSEAT_ROOT.
+# Seeding: agent-launcher.sh::seed_user_tool_dirs().
+# Contract: reported as Round-8 post-merge DX fix
+# (sandboxed HOME + lark-cli Keychain lookup mismatch), iter-11
+# extended to honor per-project isolation.
+
+set -e
+
+# Canonicalize THIS wrapper's path once. BASH_SOURCE[0] is the path we
+# were invoked through, which may be any of several symlink aliases
+# (e.g. `$HOME/bin/lark-cli`, `/usr/local/bin/lark-cli`). We compare
+# canonical targets when walking PATH so a chain of aliases back to
+# the same wrapper cannot be accepted as the "real" binary.
+_wrapper_canonical="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || true)"
+[[ -z "$_wrapper_canonical" ]] && _wrapper_canonical="${BASH_SOURCE[0]}"
+
+# Resolve the real lark-cli binary by walking PATH entries and
+# skipping any that canonicalize back to this wrapper. Falls back to
+# canonical macOS install locations.
+_resolve_real_lark_cli() {
+  local wrapper_dir
+  wrapper_dir="$(cd "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)" || wrapper_dir=""
+  # $HOME/bin is where `seed_user_tool_dirs()` symlinks us into the
+  # sandbox — cheap early skip, though the canonical check below
+  # would also catch it.
+  local wrapper_symlink_dir="$HOME/bin"
+
+  local p candidate="" entry resolved
+  local IFS=:
+  for p in $PATH; do
+    [[ -z "$p" ]] && continue
+    [[ "$p" == "$wrapper_dir" ]] && continue
+    [[ "$p" == "$wrapper_symlink_dir" ]] && continue
+    entry="$p/lark-cli"
+    [[ -x "$entry" ]] || continue
+    resolved="$(readlink -f "$entry" 2>/dev/null || printf '%s' "$entry")"
+    # Skip any PATH entry (regular file, symlink, or symlink chain)
+    # that resolves back to us — prevents exec loops when the
+    # wrapper is reachable through multiple symlink aliases.
+    if [[ -n "$_wrapper_canonical" && "$resolved" == "$_wrapper_canonical" ]]; then
+      continue
+    fi
+    candidate="$entry"
+    break
+  done
+  unset IFS
+
+  if [[ -z "$candidate" ]]; then
+    for fallback in /opt/homebrew/bin/lark-cli /usr/local/bin/lark-cli; do
+      [[ -e "$fallback" ]] || continue
+      resolved="$(readlink -f "$fallback" 2>/dev/null || printf '%s' "$fallback")"
+      if [[ -n "$_wrapper_canonical" && "$resolved" == "$_wrapper_canonical" ]]; then
+        continue
+      fi
+      candidate="$fallback"
+      break
+    done
+  fi
+
+  printf '%s\n' "$candidate"
+}
+
+_real_lark_cli="$(_resolve_real_lark_cli)"
+
+if [[ -z "$_real_lark_cli" ]]; then
+  cat >&2 <<'ERR'
+lark-cli-wrapper: cannot locate real lark-cli binary.
+Tried: PATH (excluding wrapper dir, $HOME/bin, and any alias that
+       canonicalizes back to this wrapper),
+       /opt/homebrew/bin/lark-cli,
+       /usr/local/bin/lark-cli.
+Install via `brew install @larksuite/cli` or equivalent.
+ERR
+  exit 127
+fi
+
+# Choose HOME target per the policy in the header. Prefer per-project
+# tool root (only set under tools_isolation=per-project); fall back
+# to AGENT_HOME (shared-real-home default); if neither, no rewrite.
+_target_home="${CLAWSEAT_PROJECT_TOOL_ROOT:-${AGENT_HOME:-}}"
+if [[ -n "$_target_home" && "$HOME" != "$_target_home" ]]; then
+  exec env HOME="$_target_home" "$_real_lark_cli" "$@"
+fi
+
+exec "$_real_lark_cli" "$@"

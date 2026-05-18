@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.clawseat.modal-detector</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{PYTHON_BIN}</string>
+    <string>{CLAWSEAT_ROOT}/core/scripts/modal_detector.py</string>
+    <string>--watch</string>
+    <string>--interval</string>
+    <string>60</string>
+  </array>
+  <key>StartInterval</key><integer>60</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>{HOME}/.agents/logs/modal-detector.log</string>
+  <key>StandardErrorPath</key><string>{HOME}/.agents/logs/modal-detector.err</string>
+</dict>
+</plist>

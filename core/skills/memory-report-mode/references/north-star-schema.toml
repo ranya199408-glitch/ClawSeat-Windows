@@ -1,0 +1,21 @@
+# Reference schema for ~/.agents/memory/projects/<project>/north-star.toml.
+# This file documents expected fields only; decision-log.py does not enforce it.
+
+[project]
+name = ""                 # required
+goal = ""                 # required
+success_criteria = []     # required: list of measurable outcomes
+anti_goals = []           # optional: work to avoid
+stakeholders = []         # optional: people or seats affected by goal drift
+created_at = ""           # required: ISO8601 timestamp or date
+last_updated = ""         # required: ISO8601 timestamp or date
+
+# Example:
+# [project]
+# name = "install"
+# goal = "Stabilize ClawSeat install memory workflow."
+# success_criteria = ["Phase-A B0-B7 pass", "four seats stay alive"]
+# anti_goals = ["rewrite stable v1 behavior"]
+# stakeholders = ["operator", "memory", "planner"]
+# created_at = "2026-04-27T00:00:00Z"
+# last_updated = "2026-04-27T00:00:00Z"

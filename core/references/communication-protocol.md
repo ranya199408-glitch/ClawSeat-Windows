@@ -1,0 +1,1 @@
+../skills/gstack-harness/references/communication-protocol.md

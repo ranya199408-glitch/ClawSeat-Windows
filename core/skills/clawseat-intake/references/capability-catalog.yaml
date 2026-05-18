@@ -1,0 +1,497 @@
+cartooner-video:
+  description: 视频工作流的创建、管理、执行与交付
+  triggers:
+    - 做个视频
+    - 视频
+    - 短视频
+    - 做个短视频
+    - TikTok
+    - Shorts
+    - Reels
+    - 数字人口播
+    - Quiz 视频
+    - 剧情短片
+    - MV
+    - 口型同步
+    - 视频口型同步
+    - 复用视频模板
+    - 新建工作流
+    - 新建视频工作流
+    - 修改视频工作流
+  user_examples:
+    - 新文案，做个视频
+    - 用川总模板跑一版
+    - 帮我改一下现有视频工作流
+  template_index_path: ~/.openclaw/cartooner-video/workflows/index.yaml
+  required_fields:
+    - id: platform
+      question: 这次主要发到哪个平台？
+      options:
+        - label: 抖音
+          description: 9:16 竖屏，快节奏信息流
+        - label: YouTube
+          description: 更适合横屏或频道化发布
+        - label: 通用
+          description: 先不锁平台，后面再适配
+    - id: content_type
+      question: 这次是什么类型的内容？
+      options:
+        - label: 口播
+          description: 数字人或出镜讲述为主
+        - label: 叙事
+          description: 剧情、广告、角色驱动内容
+        - label: 信息/教程
+          description: Quiz、教程、知识解释类
+    - id: goal
+      question: 这次最想达成什么结果？
+      options:
+        - label: 先快速出一版
+          description: 优先跑通第一版
+        - label: 做成长期复用模板
+          description: 目标是沉淀成稳定工作流
+        - label: 先验证方向
+          description: 先看是否适合这个题材
+  summary_contract: |
+    **推荐 Skill**: cartooner-video
+    **工作流模式**: existing | modify | create
+    **工作流ID**: <existing/modify 时必填>
+    **工作流名称**: <existing/modify 时必填>
+    **目标**: <create 时必填；modify 时可选>
+    **用户输入**: <原始自然语言>
+
+claw-image:
+  description: 通用图片生成与参考图编辑
+  triggers:
+    - 生成图片
+    - 画图
+    - create image
+    - image gen
+    - 角色设计图
+    - 参考图
+    - 九宫格
+    - 分镜帧
+  user_examples:
+    - 画个角色
+    - 给我一张概念图
+    - 把这张图改成粉笔画风格
+  required_fields:
+    - id: task_type
+      question: 这次主要是做哪类图片任务？
+      options:
+        - label: 从零生成
+          description: 没有原图，直接生成新图
+        - label: 改现有图片
+          description: 基于已有图片编辑或重绘
+        - label: 批量出变体
+          description: 围绕同一主题生成多版
+    - id: style
+      question: 风格上更接近哪一类？
+      options:
+        - label: 写实
+          description: 更接近摄影或电影感
+        - label: 卡通/概念
+          description: 更适合角色、人设、分镜
+        - label: 蒸汽朋克/赛博
+          description: 有明确世界观风格
+    - id: format
+      question: 输出更偏哪种尺寸？
+      options:
+        - label: 竖图
+          description: 适合移动端和人像内容
+        - label: 横图
+          description: 适合封面、场景、演示
+        - label: 方图
+          description: 适合通用社媒和卡片
+
+frontend-slides:
+  description: 动画丰富的 HTML / PPTX 演示文稿生成
+  triggers:
+    - 演示
+    - slides
+    - 幻灯片
+    - presentation
+    - deck
+    - PPT
+    - 网页演示
+  user_examples:
+    - 做个产品演示
+    - 帮我出一份路演 deck
+    - 做一套 HTML slides
+  required_fields:
+    - id: purpose
+      question: 这套演示主要拿来做什么？
+      options:
+        - label: 路演/Pitch
+          description: 更强调说服力和节奏
+        - label: 教学/培训
+          description: 更强调信息清晰和结构
+        - label: 内部汇报
+          description: 更强调结论和决策支持
+    - id: length
+      question: 你希望大概是什么长度？
+      options:
+        - label: 5-10 页
+          description: 更精炼，适合快速讲述
+        - label: 10-20 页
+          description: 标准完整演示
+        - label: 20+ 页
+          description: 更深入的体系化内容
+    - id: output_format
+      question: 最终想交付什么格式？
+      options:
+        - label: HTML
+          description: 默认，动画和分享都方便
+        - label: PPTX
+          description: 方便后续在 PowerPoint 里继续改
+        - label: 两者都要
+          description: 同时保留展示版和编辑版
+
+pptx:
+  description: 任何 .pptx 的创建、读取、编辑、转换
+  triggers:
+    - pptx
+    - PowerPoint
+    - 修改 PPT
+    - 导出 PPT
+    - 合并 deck
+  user_examples:
+    - 把这个 PPT 改一下
+    - 从内容生成 pptx
+    - 合并两个 deck
+  required_fields:
+    - id: operation
+      question: 这次主要对 PPT 做什么？
+      options:
+        - label: 新建
+          description: 从文本或主题生成新 deck
+        - label: 编辑现有文件
+          description: 在原文件上改内容或样式
+        - label: 转换/整理
+          description: 合并、拆分、导出或抽取
+    - id: source
+      question: 输入主要来自哪里？
+      options:
+        - label: 现有 PPTX
+          description: 已经有文件，只需要处理
+        - label: 文本内容
+          description: 从文案或要点生成
+        - label: HTML slides
+          description: 从前端演示导出或转换
+
+remotion-video-production:
+  description: Remotion 程序化视频制作
+  triggers:
+    - Remotion
+    - 程序化视频
+    - 代码动画
+    - 数据视频
+    - 品牌动画
+  user_examples:
+    - 做个数据可视化视频
+    - 用 Remotion 做品牌片头
+  required_fields:
+    - id: content_type
+      question: 这次更像哪种程序化视频？
+      options:
+        - label: 产品演示
+          description: UI、流程、功能讲解
+        - label: 数据可视化
+          description: 图表、指标、时间线
+        - label: 品牌宣传
+          description: 强调统一视觉和品牌动效
+    - id: duration
+      question: 大概需要多长？
+      options:
+        - label: 15-30 秒
+          description: 适合短片头和社媒
+        - label: 30-60 秒
+          description: 标准产品/品牌视频
+        - label: 60 秒以上
+          description: 需要更完整叙事结构
+
+script-writing-expert:
+  description: 剧本与 Fountain 脚本生成
+  triggers:
+    - 剧本
+    - 脚本
+    - script
+    - 故事
+    - 对白
+    - Fountain
+  user_examples:
+    - 写个广告脚本
+    - 给我一版短片剧本
+  required_fields:
+    - id: script_type
+      question: 这次更像哪类剧本？
+      options:
+        - label: 广告/短视频脚本
+          description: 更强调 hook 和节奏
+        - label: 短片剧本
+          description: 更强调角色和叙事
+        - label: 系列/长篇大纲
+          description: 更强调结构与延展性
+    - id: tone
+      question: 风格上更接近哪一类？
+      options:
+        - label: 喜剧/轻松
+          description: 节奏更轻快
+        - label: 悬疑/戏剧
+          description: 冲突更强
+        - label: 商业/传播
+          description: 信息表达更明确
+
+storyboard-forge:
+  description: 分镜执行 pipeline，生成分镜帧与 manifest
+  triggers:
+    - 分镜
+    - storyboard
+    - 分镜台本
+    - 镜头设计
+    - 分镜帧
+  user_examples:
+    - 给剧本出分镜
+    - 做 12 帧分镜
+    - 按场景自动拆镜头
+  required_fields:
+    - id: source_ready
+      question: 上游素材现在是什么状态？
+      options:
+        - label: 已有剧本/脚本
+          description: 可以直接按内容拆镜头
+        - label: 只有大纲
+          description: 需要边拆边补结构
+        - label: 只有一个想法
+          description: 需要先帮你形成镜头方案
+    - id: frame_count
+      question: 希望分镜做到什么粒度？
+      options:
+        - label: 6 帧
+          description: 更适合快速验证方向
+        - label: 12 帧
+          description: 更适合完整展示节奏
+        - label: 自动按场景
+          description: 由系统按内容决定
+
+art-director-expert:
+  description: 角色、场景、道具与概念设计
+  triggers:
+    - 角色设计
+    - 人设
+    - character design
+    - 场景设计
+    - 道具
+    - 概念图
+  user_examples:
+    - 画个人设
+    - 做个道具设计
+    - 给这个世界观出一张概念场景
+  required_fields:
+    - id: design_target
+      question: 这次主要设计什么？
+      options:
+        - label: 角色
+          description: 人设、服装、气质
+        - label: 场景
+          description: 空间、世界观、氛围
+        - label: 道具/UI 元素
+          description: 关键物件或界面元素
+    - id: style
+      question: 视觉风格更接近哪一类？
+      options:
+        - label: 写实
+          description: 更接近摄影或影视美术
+        - label: 卡通/概念
+          description: 更适合设定稿和角色稿
+        - label: 赛博/蒸汽
+          description: 世界观风格明确
+
+song-creator:
+  description: 歌曲、BGM、配乐生成
+  triggers:
+    - 写歌
+    - 作曲
+    - 编曲
+    - BGM
+    - 配乐
+    - 歌曲
+    - soundtrack
+    - 背景音乐
+  user_examples:
+    - 给视频配个音乐
+    - 写一首歌
+    - 做个氛围 BGM
+  required_fields:
+    - id: music_type
+      question: 这次想做哪类音乐？
+      options:
+        - label: 完整歌曲
+          description: 含主旋律和完整结构
+        - label: 纯音乐/BGM
+          description: 更适合配视频或演示
+        - label: 情绪氛围段落
+          description: 更适合做片头片尾或过场
+    - id: language
+      question: 歌曲用什么语言？
+      options:
+        - label: 中文
+          description: MiniMax 对中文歌曲支持最好
+        - label: English
+          description: 英文同样支持良好
+        - label: 中英混合
+          description: 支持中英文无缝切换
+        - label: 其他
+          description: 日语/粤语/韩语等（发音一致性可能略低）
+    - id: style
+      question: 风格更接近哪类？
+      options:
+        - label: 流行/现代
+          description: 更通用、传播感强
+        - label: 史诗/悬疑
+          description: 张力和戏剧性更强
+        - label: 科技/轻氛围
+          description: 更适合产品和信息内容
+
+minimax-speech:
+  description: MiniMax 语音克隆与 TTS
+  triggers:
+    - 语音克隆
+    - 声音克隆
+    - 音色
+    - TTS
+    - 配音
+    - voice clone
+    - text-to-speech
+  user_examples:
+    - 克隆我的声音
+    - 给这段文案配音
+    - 用某个音色说一遍
+  required_fields:
+    - id: task_type
+      question: 这次主要做哪种语音任务？
+      options:
+        - label: 克隆音色
+          description: 先做 voice_id
+        - label: 文本转语音
+          description: 直接生成配音
+        - label: 两者都要
+          description: 先克隆，再用它说话
+    - id: source
+      question: 声音来源是哪种？
+      options:
+        - label: 现成音频样本
+          description: 用样本做克隆
+        - label: 系统音色
+          description: 直接选内置声音
+        - label: 文字描述音色
+          description: 用 prompt 设计音色风格
+
+viral-copywriter:
+  description: 爆款中文社媒文案与长推文
+  triggers:
+    - 爆款文案
+    - 热点文案
+    - 推文
+    - X 内容
+    - Twitter 内容
+    - 社交媒体文案
+  user_examples:
+    - 写一篇爆款推文
+    - 帮我做个热点长文案
+  required_fields:
+    - id: platform
+      question: 主要发到哪个平台？
+      options:
+        - label: X / Twitter
+          description: 更适合长推和观点串联
+        - label: 微信 / 微博
+          description: 更适合中文传播语境
+        - label: 通用社媒
+          description: 先写核心文案，后面再适配
+    - id: tone
+      question: 你想要哪种语气？
+      options:
+        - label: 犀利
+          description: 观点强，攻击性更高
+        - label: 专业
+          description: 更适合品牌或机构表达
+        - label: 情绪化/传播感
+          description: 更适合抓眼球和传播
+
+dashscope-video-fx:
+  description: DashScope 视频特效；口型同步、数字人、唱歌视频、换脸、动作迁移
+  triggers:
+    - lip sync
+    - videoretalk
+    - talking head
+    - 唱歌视频
+    - 数字人
+    - 换脸
+    - 动作迁移
+  user_examples:
+    - 给这段视频对口型
+    - 做一个数字人口播
+    - 让这个角色唱歌
+  required_fields:
+    - id: fx_type
+      question: 这次主要做哪类视频特效？
+      options:
+        - label: 对口型
+          description: 已有视频 + 音频，对齐嘴型
+        - label: 数字人口播
+          description: 静态图 + 音频生成说话视频
+        - label: 表演特效
+          description: 唱歌、换脸或动作迁移
+    - id: source_type
+      question: 你手里现在主要有什么输入？
+      options:
+        - label: 静态图 + 音频
+          description: 更适合 talking head
+        - label: 现成视频 + 音频
+          description: 更适合 lip-sync
+        - label: 只有一个主要素材
+          description: 先确定缺什么再补
+
+koder:
+  description: 工程/技术类意图信号（Phase -1 路由用，不驱动提问）
+  triggers:
+    - 加一个功能
+    - 帮我改一下
+    - 修 bug
+    - 重构
+    - API
+    - 数据库
+    - React
+    - FastAPI
+    - 配置
+    - 架构
+    - 部署
+    - 性能优化
+    - 我有个想法
+    - brainstorm
+    - 值不值得做
+    - 新产品
+    - 想探索一下
+  user_examples:
+    - 给这个接口加个字段
+    - 修一下这个页面
+    - 帮我重构这段代码
+    - 我有个产品想法想聊聊
+  route_to: engineering_intake
+
+workflow-architect:
+  description: 工作流设计意图信号（Phase -1 路由用，不驱动提问）
+  triggers:
+    - 帮我设计一个工作流
+    - 自动化我的流程
+    - 把我的工作流做成 agent
+    - 工作流设计
+    - 流程自动化
+    - 多步骤复杂任务
+    - 帮我规划这个流程
+    - 我每次都要手动做这些步骤
+  user_examples:
+    - 我每次做视频都要手动做很多步骤，帮我设计一个自动化流程
+    - 帮我把研究→撰文→发布的流程做成可跑的 agent 工作流
+    - 我有个复杂任务，需要多个 agent 协作完成
+  route_to: engineering_intake

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "clawseat://schemas/project_toml_v3.schema.json",
+  "title": "ClawSeat project.toml v3",
+  "description": "Schema for ClawSeat v3 multi-team project.toml. Backward-compatible with v2 flat seat layout; adds [mode] and [teams] metadata.",
+  "type": "object",
+  "required": ["project_name", "seats", "seat_roles"],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "repo_root": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "object",
+      "description": "v3 team structure declaration. Absent → defaults to single.",
+      "properties": {
+        "team_structure": {
+          "type": "string",
+          "enum": ["single", "multi"]
+        }
+      },
+      "required": ["team_structure"]
+    },
+    "teams": {
+      "type": "object",
+      "description": "v3 multi-mode metadata. Only required when mode.team_structure = multi.",
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9-]*$": {
+          "type": "object",
+          "required": ["seats"],
+          "properties": {
+            "seats": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+              "minItems": 1
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "seats": {
+      "type": "array",
+      "description": "Flat seat id list. v3 multi mode names them <team>-<role>[-<variant>].",
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "seat_roles": {
+      "type": "object",
+      "description": "Flat seat_id -> role string. Must cover every entry in seats.",
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9-]*$": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "seat_overrides": {
+      "type": "object",
+      "description": "Per-seat tool/provider/auth overrides. Flat keys = seat_id.",
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9-]*$": {
+          "type": "object",
+          "properties": {
+            "tool": {"$ref": "#/$defs/tool_enum"},
+            "provider": {"$ref": "#/$defs/provider_enum"},
+            "auth_mode": {"$ref": "#/$defs/auth_mode_enum"},
+            "model": {"type": "string", "description": "Concrete model id from approved config (e.g. claude-opus-4-7, claude-sonnet-4-6)."},
+            "capabilities": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "purpose": {"type": "string"},
+            "parallel_instances": {"type": "integer", "minimum": 1, "maximum": 10}
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"mode": {"properties": {"team_structure": {"const": "multi"}}}},
+        "required": ["mode"]
+      },
+      "then": {
+        "required": ["teams"],
+        "description": "multi mode requires [teams] metadata"
+      }
+    }
+  ],
+  "$defs": {
+    "tool_enum": {
+      "type": "string",
+      "enum": ["claude", "codex", "gemini"]
+    },
+    "provider_enum": {
+      "type": "string",
+      "enum": ["anthropic", "openai", "google", "minimax"]
+    },
+    "auth_mode_enum": {
+      "type": "string",
+      "enum": ["oauth", "oauth_token", "api"]
+    }
+  }
+}

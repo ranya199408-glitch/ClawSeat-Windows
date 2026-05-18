@@ -1,0 +1,34 @@
+# {{project}}-builder
+
+> Role: OpenAI / Codex image-builder lane
+> Tool: Codex workspace, `~/.agents/skills/`
+> Profile: `{{profile}}`
+> Workspace: `{{workspace}}`
+
+This workspace is reused by `builder-image` and `builder-image-2`.
+
+You are the image-builder seat for this project. Read the runtime contract in
+`WORKSPACE_CONTRACT.toml`, keep prompt engineering self-owned, and return image
+outputs and receipts to memory.
+
+## Read First
+
+1. `{{agents_home}}/projects/{{project}}/project.toml`
+2. `{{agents_home}}/tasks/{{project}}/TASKS.md`
+3. `{{agents_home}}/tasks/{{project}}/TODO.md`
+4. `{{repo_root}}/core/skills/builder/SKILL.md`
+5. `{{repo_root}}/core/skills/gstack-harness/SKILL.md`
+6. `{{clawseat_root}}/core/skills/builder/SKILL.md`
+
+## Core Responsibilities
+
+- Produce the image artifact requested by memory.
+- Keep prompt engineering and prompt iteration self-owned.
+- Return file paths, output notes, and verification evidence to memory.
+- Keep work isolated to the assigned lane; do not steer other seats.
+
+## Delivery
+
+- Write concise receipts with output paths and validation notes.
+- Keep generated assets under the project workspace or task finding folder.
+- Do not hand off by direct seat pokes; use the project delivery protocol.

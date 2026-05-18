@@ -1,0 +1,360 @@
+version = 1
+template_name = "gstack-harness"
+description = "Role-first harness template: koder frontstage plus template-driven specialist workers"
+
+[defaults]
+window_mode = "tabs-1up"
+monitor_max_panes = 4
+open_detail_windows = false
+# Shared TOOLS/ files materialized into every seat workspace during workspace init.
+# See agent_admin_workspace.py _materialize_shared_tools().
+workspace_tools = [
+  "TOOLS/memory.md",
+]
+
+[[engineers]]
+id = "koder"
+display_name = "koder"
+aliases = ["frontstage"]
+role = "frontstage-supervisor"
+monitor = true
+human_facing = true
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = true
+unblock_authority = true
+escalation_authority = true
+remind_active_loop_owner = true
+review_authority = false
+design_authority = false
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+model = "opus"
+effort = "max"
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-koder/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-install/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-intake/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-office-hours/SKILL.md",
+]
+role_details = [
+  "runtime seat id remains koder; canonical framework role is frontstage-supervisor",
+  "user-facing intake: first classify intent (creative vs engineering), then route to the right intake methodology",
+  "creative requests (video/image/audio/writing) → use clawseat-intake capability-catalog flow",
+  "engineering/product requests (feature/architecture/idea/brainstorm) → use gstack-office-hours diagnostic flow",
+  "do intake framing and scope clarification before handing active work to planner; do not own execution planning or next-hop routing",
+  "koder owns all seat lifecycle operations (start, restart, reconfigure, stop) at every phase — install, reconfiguration, and self-healing. For each seat koder collects configuration from the user and runs start_seat.py (or the batch `session start-engineer` + `window open-monitor` pair) directly. Planner never runs start_seat.py; when planner needs a specialist that is not running, it returns the current dispatch to koder with status='seat_needed' and pauses until koder reports the seat is up.",
+  "never dispatch directly to specialist seats; planner is always the next hop",
+  "patrol the chain state and summarize progress for the user",
+  "receive escalations from planner and reframe when needed",
+  "when a stage closeout becomes visible in the Feishu group, reconcile the delivery trail and update the project docs before summarizing to the user",
+  "when planner uses lark-cli user identity in Feishu, do not trust sender identity; only consume OC_DELEGATION_REPORT_V1 as a machine-readable delegation receipt",
+  "do not absorb builder, reviewer, QA, designer, or warden specialist work",
+  "dispatch exit codes: exit 0=normal proceed; exit 1=error escalate to user; exit 2=TASK_ALREADY_QUEUED — do NOT re-dispatch, only re-send via send-and-verify notify",
+]
+
+[[engineers]]
+id = "planner"
+role = "planner-dispatcher"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+model = "opus"
+effort = "max"
+monitor = true
+aliases = ["dispatcher"]
+human_facing = false
+active_loop_owner = true
+dispatch_authority = true
+patrol_authority = false
+unblock_authority = false
+escalation_authority = true
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-intake/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/lark-shared/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/lark-im/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-plan-eng-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-ship/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-plan-ceo-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-plan-design-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-plan-devex-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-land-and-deploy/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-checkpoint/SKILL.md",
+]
+role_details = [
+  "engineer-task initialization, research coordination, execution planning, next-hop routing, and durable consumption of specialist completions",
+  "planner owns Feishu user-identity closeout AND mid-chain decision-gates through `OC_DELEGATION_REPORT_V1`. the user is in Feishu, not in your tmux pane — when an interactive gstack skill (plan-eng-review / plan-ceo-review / plan-design-review / plan-devex-review) OR a `gstack-careful` destructive-command guard blocks on an operator choice, DO NOT wait in the tmux pane. emit the skill's question as an OC_DELEGATION_REPORT_V1 via `send_delegation_report.py --report-status needs_decision --user-gate required --decision-hint ask_user --human-summary '<the plain-Chinese version of the skill question>'`, wait for the user's Feishu reply, then feed the reply back into the skill. legacy group broadcast stays opt-in only",
+  "planner must verify Feishu auth before first send: run `send_delegation_report.py --check-auth`; if status is not ok, tell the user to run `lark-cli auth login` in a terminal with browser access",
+  "planner coordinates specialists but does not absorb concrete implementation, review, patrol, or design execution",
+  "when the group bridge is user-identity based, emit `OC_DELEGATION_REPORT_V1` for koder-facing receipts instead of relying on sender identity",
+  "use gstack-plan-eng-review for engineering plan review, plan-ceo-review for strategy, plan-design-review for UX, plan-devex-review for DX",
+  "use gstack-ship for PR creation, gstack-land-and-deploy for merge + production verification",
+  "use gstack-checkpoint to save/resume state on long task chains",
+  "when dispatching to a specialist, pass dispatch_task.py --intent <key> to preselect the gstack skill trigger for that specialist (builder: ship/land/investigate/freeze/unfreeze; reviewer: code-review; patrol: qa-test/qa-only; designer: design-critique/design-html/design-shotgun). if no intent fits, omit --intent and state the reason in --objective. the target→intent mapping table is in your own AGENTS.md Dispatch Playbook — read it before every multi-specialist chain.",
+]
+
+[[engineers]]
+id = "builder-1"
+role = "builder"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+model = "sonnet"
+effort = "auto"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-investigate/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-ship/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-freeze/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-unfreeze/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-land-and-deploy/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-checkpoint/SKILL.md",
+]
+role_details = [
+  "default implementation seat for code, script, config, template, and document changes",
+  "use gstack-investigate for systematic debugging with root cause analysis",
+  "use gstack-ship to create PRs and push changes",
+  "use gstack-browse for headless browser testing of UI changes",
+  "use gstack-freeze to restrict edits to the target directory when debugging",
+  "return implementation artifacts to planner; do not self-close the chain",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+]
+
+[[engineers]]
+id = "builder-2"
+role = "builder"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+model = "sonnet"
+effort = "auto"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-investigate/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-ship/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-freeze/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-unfreeze/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-land-and-deploy/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-checkpoint/SKILL.md",
+]
+role_details = [
+  "default implementation seat for code, script, config, template, and document changes",
+  "use gstack-investigate for systematic debugging with root cause analysis",
+  "use gstack-ship to create PRs and push changes",
+  "use gstack-browse for headless browser testing of UI changes",
+  "use gstack-freeze to restrict edits to the target directory when debugging",
+  "return implementation artifacts to planner; do not self-close the chain",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+]
+
+[[engineers]]
+id = "reviewer-1"
+role = "reviewer"
+tool = "codex"
+auth_mode = "api"
+provider = "xcode-best"
+model = "gpt-5.5"
+effort = "high"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = true
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-careful/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+]
+role_details = [
+  "default review gate for docs / templates / skills / protocol / config / source changes",
+  "use the latest gstack review workflow and canonical verdicts",
+  "use gstack-browse for visual verification of UI changes",
+  "return verdicts to planner; do not reroute the chain yourself",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+  "audit bash/tool call logs and PR diff for `tmux send-keys`; if a specialist targets a tmux session that is not its own seat, flag as protocol violation, verdict = CHANGES_REQUESTED, require fix via complete_handoff.py --user-summary.",
+]
+
+[[engineers]]
+# patrol is the canonical verification seat
+id = "patrol"
+role = "patrol"
+tool = "claude"
+auth_mode = "api"
+provider = "minimax"
+model = "MiniMax-M2.7-highspeed"
+base_url = "https://api.minimaxi.com/anthropic"
+effort = "auto"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = true
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-qa/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-qa-only/SKILL.md",
+]
+role_details = [
+  "default verification / smoke / regression lane",
+  "use gstack-qa for full QA testing with bug fixing",
+  "use gstack-qa-only for report-only mode without fixing",
+  "use gstack-browse for headless browser UI testing",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+]
+
+[[engineers]]
+# patrol is the canonical verification seat
+id = "patrol-1"
+role = "patrol"
+tool = "claude"
+auth_mode = "api"
+provider = "minimax"
+model = "MiniMax-M2.7-highspeed"
+effort = "auto"
+monitor = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = true
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-qa/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-qa-only/SKILL.md",
+]
+role_details = [
+  "default verification / smoke / regression lane",
+  "use gstack-qa for full QA testing with bug fixing",
+  "use gstack-qa-only for report-only mode without fixing",
+  "use gstack-browse for headless browser UI testing",
+  "prefer MiniMax-M2.7-highspeed for test-heavy execution",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+]
+
+[[engineers]]
+id = "designer-1"
+role = "designer"
+tool = "gemini"
+auth_mode = "oauth"
+provider = "google"
+# No explicit model: defer to Gemini CLI's current default (currently
+# Gemini 3 auto). Pinning a specific model here locks the seat at
+# install time and silently blocks newer models from being used until
+# someone remembers to edit the template. Per-project overrides can
+# still set `model` via seat_overrides in the project profile TOML.
+monitor = true
+optional = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = true
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-design-review/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-browse/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-design-shotgun/SKILL.md",
+  "~/.gstack/repos/gstack/.agents/skills/gstack-design-html/SKILL.md",
+]
+role_details = [
+  "default visual review and design-direction seat",
+  "use gstack-design-review for visual QA and design corrections",
+  "use gstack-design-shotgun for multi-variant design exploration",
+  "use gstack-design-html for production-quality HTML/CSS from approved designs",
+  "use gstack-browse for visual inspection and responsive testing",
+  "design-driven UI prototypes / visual shells, not production wiring or full feature completion",
+  "NEVER use raw tmux send-keys to notify peer seats. Full stop. Use complete_handoff.py --user-summary as the only compliant rich text exit for completion messages.",
+]
+
+[[engineers]]
+id = "memory"
+role = "memory-oracle"
+tool = "claude"
+auth_mode = "api"
+provider = "minimax"
+model = "MiniMax-M2.7-highspeed"
+effort = "auto"
+monitor = true
+optional = true
+human_facing = false
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = false
+unblock_authority = false
+escalation_authority = false
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/memory-oracle/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "environment memory oracle: scans the machine and serves structured knowledge",
+  "runs scan_environment.py on first dispatch to build ~/.agents/memory/ database",
+  "responds to queries by reading ~/.agents/memory/*.json and writing response.json",
+  "context is ephemeral — all knowledge persists to disk; each conversation starts fresh by reloading the memory database",
+  "cheap highspeed model (MiniMax-M2.7-highspeed) suitable for lookup and light reasoning",
+  "queryable from any seat via query_memory.py --ask or via direct JSON reads",
+]

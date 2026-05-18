@@ -1,0 +1,48 @@
+# TOOLS/memory.md — Memory CC 知识库查询 SOP
+
+**装 seat、配 provider、查 feishu group、查 API key 之前**：
+永远先查 Memory CC 整理的本地知识库 `~/.agents/memory/*.json`。
+**只有**本地知识库里没有的才委派 Memory CC 去查。
+
+## Step 1: 直接查知识库（首选，0 延迟、0 幻觉、0 token 消耗）
+
+```bash
+# 精确路径查询（知道 key 在哪）:
+python3 {{memory_scripts}}/query_memory.py --key credentials.keys.MINIMAX_API_KEY.value
+python3 {{memory_scripts}}/query_memory.py --key github.gh_cli.active_login
+python3 {{memory_scripts}}/query_memory.py --key openclaw.feishu.groups
+
+# 模糊搜索（不确定 key 在哪）:
+python3 {{memory_scripts}}/query_memory.py --search "minimax"
+python3 {{memory_scripts}}/query_memory.py --search "feishu"
+
+# 列所有文件 + 总览:
+python3 {{memory_scripts}}/query_memory.py --status
+python3 {{memory_scripts}}/query_memory.py --file openclaw --section feishu
+```
+
+当前知识库含 9 个类别：
+`system`, `environment`, `credentials`, `openclaw`, `gstack`, `clawseat`, `repos`, `network`, `github`。
+
+## Step 2: Memory CC dispatch（仅 Step 1 miss 时 fallback）
+
+当本地知识库里**真的没有**所需事实（比如用户提到了一个从未记录过的新 API provider），
+才委派 Memory CC 主动去扫描 / 联网查 / 更新知识库：
+
+```bash
+python3 {{scripts}}/dispatch_task.py \
+  --profile <profile.toml 路径> \
+  --source {{heartbeat_owner}} \
+  --target memory \
+  --task-id MEM-ENRICH-<timestamp> \
+  --title "补充 XXX 知识" \
+  --objective "本地知识库里没有 <具体项>，请扫描/查证后写入对应的 ~/.agents/memory/*.json，然后通过 memory_deliver.py 回复我"
+```
+
+Memory CC 完成后会自动更新知识库 + 发 DELIVERY.md 给你，你再回 Step 1 重查即可。
+
+## 禁忌
+
+- 不要在 TUI 里直接问用户 "你的 MINIMAX_API_KEY 是什么" —— 先 `--key credentials.keys.MINIMAX_API_KEY.value` 查
+- 不要问用户 "feishu group id 选哪个" 前没先 `--key openclaw.feishu.groups` 列出候选
+- 不要自己 `cat ~/.env*` / `cat ~/.openclaw/openclaw.json` 重造已被扫描好的事实 —— 用 query_memory.py

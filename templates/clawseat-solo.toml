@@ -1,0 +1,111 @@
+version = 1
+template_name = "clawseat-solo"
+description = "Memory + builder + planner, all OAuth top models. Standard brief → workflow → dispatch → verdict cycle."
+# graceful-fallback: external skill refs below are optional installs; seats degrade gracefully when absent.
+
+[window_layout]
+shared_memories_window_title = "clawseat-memories"
+workers_window_title = "clawseat-{PROJECT}-workers"
+
+[window_layout.workers_grid]
+left_main_seat = "builder"
+left_main_width = "50%"
+right_seats = ["planner"]
+right_fill_order = "col-major"
+
+[defaults]
+home_mode = "real"
+dangerously_skip_permissions = true
+window_mode = "split-2"
+monitor_max_panes = 3
+open_detail_windows = false
+workspace_tools = ["TOOLS/memory.md"]
+
+[[engineers]]
+id = "memory"
+display_name = "Memory"
+role = "project-memory"
+window = "memory"
+tool = "claude"
+auth_mode = "oauth"
+provider = "anthropic"
+monitor = true
+human_facing = true
+active_loop_owner = false
+dispatch_authority = false
+patrol_authority = true
+unblock_authority = true
+escalation_authority = true
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-memory/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-decision-escalation/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-koder/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-memory-reporting/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/clawseat-privacy/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/memory-oracle/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/planner/SKILL.md",
+  "~/.agents/skills/skill-creator/SKILL.md",
+  "~/.agents/skills/find-skills/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "L3 hub + brief-handoff → planner. Skill management for self/builder/planner.",
+  "patrol_authority + escalation; dispatch and active loop delegated to planner",
+  "skill management: can trigger find-skills + skill-creator for self/builder/planner",
+]
+
+[[engineers]]
+id = "builder"
+display_name = "Builder"
+role = "code-builder"
+window = "workers"
+window_pane = "left-main"
+tool = "codex"
+auth_mode = "oauth"
+provider = "openai"
+monitor = true
+human_facing = false
+review_authority = false
+design_authority = false
+dispatch_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/builder/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "Implementation seat (codex oauth). Self-review + memory final verdict. No reviewer seat.",
+]
+
+[[engineers]]
+id = "planner"
+display_name = "Planner"
+role = "planner-dispatcher"
+window = "workers"
+tool = "gemini"
+auth_mode = "oauth"
+provider = "google"
+monitor = true
+human_facing = false
+active_loop_owner = true
+dispatch_authority = true
+patrol_authority = false
+unblock_authority = false
+escalation_authority = true
+remind_active_loop_owner = false
+review_authority = false
+design_authority = false
+skills = [
+  "{CLAWSEAT_ROOT}/core/skills/gstack-harness/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/planner/SKILL.md",
+  "{CLAWSEAT_ROOT}/core/skills/tmux-basics/SKILL.md",
+]
+role_details = [
+  "Workflow author + dispatch orchestrator (gemini oauth).",
+  "Receives memory briefs → workflow.md → assign_owner(builder) → verdict consumption.",
+  "No reviewer seat in solo; planner forwards verdict requests to memory.",
+]

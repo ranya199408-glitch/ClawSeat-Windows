@@ -1,0 +1,14 @@
+{
+  "name": "ClawSeat Marketplace",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "clawseat",
+      "description": "Install ClawSeat as a product skill bundle and let OpenClaw drive the full bootstrap/configure/verify flow",
+      "source": {
+        "type": "path",
+        "path": "."
+      }
+    }
+  ]
+}

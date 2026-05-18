@@ -1,0 +1,7 @@
+interface:
+  display_name: "ClawSeat Install"
+  short_description: "Install/bootstrap engine for ClawSeat runtime bring-up and seat recovery"
+  default_prompt: "Use $clawseat-install as ClawSeat's narrow install/bootstrap engine. Detect and reuse any existing workspace or TUI seat, handle onboarding handoffs cleanly, and route OpenClaw or Feishu-facing product entry through $clawseat."
+
+policy:
+  allow_implicit_invocation: true

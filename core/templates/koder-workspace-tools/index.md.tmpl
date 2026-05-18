@@ -1,0 +1,30 @@
+# TOOLS.md — koder command index
+
+## 强制规则（Hard rules）
+
+- 禁止直接用 tmux send-keys 给 seat 发自然语言消息来派发任务。必须使用 `dispatch_task.py`。
+- **在 OpenClaw 模式下，你当前就是 `{{heartbeat_owner}}`，禁止运行 `start_seat.py --seat {{heartbeat_owner}}`。**
+- dispatch 目标永远是 `{{notify_target}}`（项目默认下一跳，从 PROJECT_BINDING.toml / profile 配置），不得直接派给 specialist。见 SOUL.md 核心原则。
+- 行为原则（反谄媚、intake 路由、不越权）统一写在 SOUL.md，这里只列命令。
+
+## 按任务查命令（Read the matching sub-file）
+
+| 你要做什么 | 读哪个文件 |
+|------|------|
+| 给 planner 派任务 / 完成交接 / 发通知 | `TOOLS/dispatch.md` |
+| 管理项目（当前项目是什么、新建项目、项目间隔离） | `TOOLS/project.md` |
+| 拉起 backend seat（配置收集 + 启动 + TUI 可见性 + 故障排查） | `TOOLS/seat.md` |
+| 查询环境知识（API keys、路径、OpenClaw 配置） | `TOOLS/memory.md` |
+| 安装 / 更新 / 环境检查 | `TOOLS/install.md` |
+
+## 快速索引（所有命令的绝对路径速查）
+
+- dispatch_task.py: `{{scripts}}/dispatch_task.py`
+- complete_handoff.py: `{{scripts}}/complete_handoff.py`
+- notify_seat.py: `{{scripts}}/notify_seat.py`
+- start_seat.py: `{{scripts}}/start_seat.py`
+- tui_ctl.py: `{{scripts}}/tui_ctl.py`
+- query_memory.py: `{{memory_scripts}}/query_memory.py`
+- render_console.py: `{{scripts}}/render_console.py`
+- preflight.py: `{{clawseat_root}}/core/preflight.py`
+- skill_manager.py: `{{clawseat_root}}/core/scripts/skill_manager.py`

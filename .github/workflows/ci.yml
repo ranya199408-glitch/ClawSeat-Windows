@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install tmux
+        run: sudo apt-get install -y tmux
+
+      - name: Install ClawSeat (editable)
+        run: pip install -e ".[dev]"
+
+      - name: Set CLAWSEAT_ROOT
+        run: echo "CLAWSEAT_ROOT=$(pwd)" >> $GITHUB_ENV
+
+      - name: Pytest
+        run: python -m pytest tests/ -v --durations=50
+
+      - name: Skill registry check
+        run: python core/scripts/skill_manager.py check
+
+      # Harness selftest exercises the full runtime round-trip including
+      # the Feishu delegation report (`feishu_delegation_report.status ==
+      # "sent"`), which requires a real lark-cli install + token and a
+      # human-in-the-loop handshake. GitHub Actions cannot satisfy that,
+      # so the step defaults off and the maintainer opts in by setting
+      # the `RUN_HARNESS_SELFTEST` repository variable to `1` (Settings →
+      # Secrets and variables → Actions → Variables) once a Feishu
+      # sandbox account is wired up. Running locally is unchanged —
+      # `python selftest.py` still works directly.
+      - name: Harness selftest (opt-in — skipped on CI by default)
+        if: vars.RUN_HARNESS_SELFTEST == '1'
+        run: |
+          cd core/skills/gstack-harness/scripts
+          python selftest.py > /dev/null
+
+      - name: Compile check (core modules)
+        run: |
+          python -m py_compile core/resolve.py
+          python -m py_compile core/preflight.py
+          python -m py_compile core/bootstrap_receipt.py
+          python -m py_compile core/skill_registry.py
+          python -m py_compile core/transport/transport_router.py
+          python -m py_compile core/adapter/clawseat_adapter.py
+
+      - name: mypy (strict modules)
+        run: |
+          python -m mypy core/resolve.py core/skill_registry.py core/transport/transport_router.py \
+            --ignore-missing-imports --no-error-summary

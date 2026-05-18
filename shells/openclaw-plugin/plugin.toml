@@ -1,0 +1,21 @@
+[plugin]
+name = "clawseat-openclaw"
+version = "0.1.0"
+description = "ClawSeat control plane plugin for OpenClaw"
+
+[plugin.dependencies]
+# openclaw harness adapter is stub (adapters/harness/openclaw/ does not exist yet)
+openclaw_harness_adapter = { path = "adapters/harness/openclaw", optional = true }
+
+[plugin.entrypoint]
+module = "openclaw_plugin"
+function = "register"
+
+[plugin.shell]
+platform = "openclaw"
+transport = "openclaw-api"
+
+[plugin.fallback]
+# tmux-cli adapter is used when openclaw adapter is not available
+# paths are relative to CLAWSEAT_ROOT (repo root)
+adapter = "adapters/harness/tmux-cli/adapter.py"

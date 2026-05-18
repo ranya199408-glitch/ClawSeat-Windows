@@ -1,0 +1,44 @@
+name = "clawseat"
+version = "0.2.1"
+description = "ClawSeat 多席位控制面框架"
+
+[modules]
+root = ["README.md", "marketplace.json", ".claude-plugin/plugin.json", "manifest.toml"]
+core = [
+  "core/adapter",
+  "core/bootstrap_receipt.py",
+  "core/engine",
+  "core/harness_adapter.py",
+  "core/migration",
+  "core/preflight.py",
+  "core/scripts",
+  "core/shell-scripts",
+  "core/skills",
+  "core/templates",
+  "core/transport",
+]
+adapters = ["adapters/harness"]
+shells = ["shells/openclaw-plugin", "shells/claude-bundle", "shells/codex-bundle"]
+profiles = ["examples/starter/profiles"]
+docs = ["docs/INSTALL.md", "docs/ARCHITECTURE.md"]
+optional = [
+  "adapters/projects/openclaw",
+  "docs",
+]
+
+[templates]
+clawseat-engineering = "templates/clawseat-engineering.toml"
+clawseat-creative = { path = "templates/clawseat-creative.toml", description = "Cartooner-bound 5-seat creative team: memory + 2 image lanes + 1 av lane + patrol" }
+clawseat-solo = { path = "templates/clawseat-solo.toml", description = "Minimal 3-seat collaboration, all OAuth top models, planner-gemini dispatch cycle" }
+
+[entrypoints]
+openclaw_marketplace = "marketplace.json"
+openclaw_bundle = ".claude-plugin/plugin.json"
+product_skill = "core/skills/clawseat/SKILL.md"
+install_skill = "core/skills/clawseat-install/SKILL.md"
+runtime_core = "core/skills/gstack-harness/SKILL.md"
+bootstrap = "shells/openclaw-plugin/openclaw_bootstrap.py"
+
+[dependencies]
+python = ">=3.11"
+tomllib = { stdlib = true }

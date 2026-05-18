@@ -1,0 +1,7 @@
+interface:
+  display_name: "ClawSeat Init"
+  short_description: "Local shortcut that bootstraps or resumes the canonical install project after ClawSeat is already installed"
+  default_prompt: "Use /cs only as the local post-install ClawSeat shortcut. Reuse or bootstrap the canonical install project, then start planner through the clawseat-install flow. In OpenClaw or Feishu environments, prefer the product-level $clawseat entry instead of /cs."
+
+policy:
+  allow_implicit_invocation: true

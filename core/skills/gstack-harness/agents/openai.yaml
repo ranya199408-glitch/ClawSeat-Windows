@@ -1,0 +1,6 @@
+interface:
+  display_name: "gstack-harness"
+  short_description: "Team harness runtime for gstack-based multi-seat orchestration, tmux handoffs, heartbeat patrol, and CLI control console."
+  default_prompt: "Use $gstack-harness to orchestrate a multi-seat engineering team from a project profile."
+policy:
+  allow_implicit_invocation: true

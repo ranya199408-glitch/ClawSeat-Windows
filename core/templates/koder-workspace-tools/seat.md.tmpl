@@ -1,0 +1,246 @@
+# TOOLS/seat.md — 拉起 backend seat（配置收集 + 启动 + 可见性）
+
+> 核心：**用户必须能看见 TUI**。你不得替用户决定 tool/auth/provider。
+
+## 可拉起的 backend seat
+
+{{backend_list}}
+
+在 OpenClaw 模式下你自己是 `{{heartbeat_owner}}`，**参见 TOOLS.md 强制规则**：禁止 `--seat {{heartbeat_owner}}`。
+
+> Note: starting a seat is setup/provisioning, not a dispatched task.
+> Koder handles this during install and only delegates actual work-items via dispatch_task.py (see SOUL.md).
+
+## 配置收集 SOP（硬性，缺一不可）
+
+**绝对铁律：你不得自己替用户决定 tool / auth_mode / provider / model**。可能的组合有十几种（claude+oauth+anthropic / claude+api+minimax / claude+api+xcode-best / codex+api+xcode-best / gemini+oauth+google / ...），账号状态/API 余额/偏好只有用户自己知道。你的职责是**把候选列给用户**。
+
+### Step 1: 先查 Memory CC 列出候选
+
+```bash
+# 列出所有已知合法 provider / 已 seed 的 API key:
+python3 {{memory_scripts}}/query_memory.py --search "provider"
+python3 {{memory_scripts}}/query_memory.py --search "API_KEY"
+
+# 检查用户机器上已有的 CLI:
+command -v claude; command -v codex; command -v gemini
+
+# 查看用户已配好的 oauth 身份（用过的）:
+ls ~/.agents/runtime/identities/claude/oauth/ 2>/dev/null
+ls ~/.agents/runtime/identities/codex/oauth/ 2>/dev/null
+ls ~/.agents/runtime/identities/gemini/oauth/ 2>/dev/null
+
+# 列已 seed 的 API secrets 目录结构（只看哪些 provider 已就位，**不要读 / 编辑 .env 本身 —— 那是 seat 的事**）:
+ls ~/.agents/secrets/claude/
+ls ~/.agents/secrets/codex/
+```
+
+### Step 2: 给用户展示一张表，问他选什么
+
+**永远不要假设**。把发现的选项列给用户：
+
+```
+seat: planner
+  你可以用以下组合（我检测到这些凭证/CLI 都可用）:
+  1. claude + oauth  + anthropic            (Claude Max / Pro 订阅，无需 API key)
+  2. claude + api    + anthropic            (需 ANTHROPIC_API_KEY)
+  3. claude + api    + minimax              (走 MiniMax 端点，Memory 里有 key)
+  4. claude + api    + xcode-best           (你之前 qa-1 用过这个)
+  5. codex  + api    + xcode-best           (gpt-5.5 系列)
+
+  请选 1-5 或告诉我用别的组合。
+```
+
+用户答了之后，**再次回显确认**：
+
+```
+我要给 planner 用: claude + api + minimax (MiniMax-M2.7-highspeed)
+确认吗？(yes/no)
+```
+
+### Step 3: 用户 yes 之后才调 start_seat
+
+## 拉 seat 的完整模板（永远按这个走）
+
+```bash
+# Step 0: 已经完成配置收集 SOP，用户确认了 <tool> <auth_mode> <provider>
+
+# Step 1: start（建 tmux + 启 CLI + 尝试开窗口）
+python3 {{scripts}}/start_seat.py \
+  --profile <profile> --seat <{{backend_choices}}> \
+  --tool <claude|codex|gemini> --auth-mode <oauth|api> --provider <provider> \
+  --confirm-start
+
+# Step 2: 等 3 秒让 CLI 初始化
+sleep 3
+
+# Step 3: 验证可见性 ← 不要省
+python3 {{scripts}}/tui_ctl.py --profile <profile> check --seat <X>
+
+# Step 4: 如果 RUNNING_NOT_VISIBLE, recover
+python3 {{scripts}}/tui_ctl.py --profile <profile> recover --seat <X>
+
+# Step 5: 验证 CLI 是否正常初始化（pane 有内容）
+python3 {{scripts}}/tui_ctl.py --profile <profile> status --seat <X>
+# 看 Content 列. yes=TUI 渲染好了; no=CLI 可能启动失败 (auth 错 / provider 拼错 / 模型不存在)
+
+# Step 6 (仅 oauth 模式): 告诉用户去登录
+# start_seat 的任务就到打开 iTerm 为止 —— 任何 OAuth 登录（claude / codex /
+# gemini）都由用户在 TUI 里手动完成。你 **不要** 尝试复制 token、读 auth.json、
+# 帮用户点登录。start_seat.py 会自动检测常见登录引导并打印
+# "manual_onboarding_required: ... first-run step '<cli>_oauth_login' ..."。
+# 看到这个就直接告诉用户：
+#   "seat <X> 的 iTerm tab 已打开, 请去那个 TUI 里完成 <cli> OAuth 登录,
+#    登完告诉我继续。"
+```
+
+## OAuth 登录规则（硬性）
+
+你（koder）的职责到 `start_seat.py` 完成为止。**所有 oauth 登录都是用户在 iTerm TUI 里手动完成的**。
+
+- 不要读或复制 `~/.codex/auth.json`、`~/.claude/...`、`~/.gemini/...`
+- 不要 `claude login` / `codex login` 代替用户跑
+- 不要替用户粘贴 token
+- 你看到 `manual_onboarding_required` 就**停下来等用户反馈**，让他/她去看 iTerm tab
+
+每种 CLI 的登录流程（用户在 TUI 里做，你不用管细节）：
+
+| tool | oauth 流程 | 验证登录成功（统一判据） |
+|------|-----------|------------------------|
+| claude (anthropic) | 浏览器打开 → 授权 → 粘贴 code | TUI 返回主界面，`❯` 可输入；不再出现 `Browser didn't open?` / `Paste code here` 等登录提示 |
+| codex (openai) | Sign in with ChatGPT → 浏览器 → one-time code | TUI 返回主界面，可输入；不再出现 `Sign in with ChatGPT` / `Finish signing in via your browser` / `Enter this one-time code` |
+| gemini (google) | Sign in with Google → 浏览器 Google 授权 | TUI 返回主界面，可输入；不再出现 `Sign in with Google` / `Waiting for authentication` |
+
+**统一判据 = "TUI 回到干净 prompt，能接收输入"**。不要盯具体字符串（它们随 CLI 版本漂移）——盯"交互状态"。
+
+这三个 CLI 都会把登录态写到各自管理的目录（`~/.codex/auth.json` / claude 的 settings / gemini 的 config），**runtime sandbox 会把写入目标隔离到 `~/.agents/runtime/identities/<tool>/<mode>/<identity>/` 下**——用户每次登录是**给这一个 seat 这一份凭证**，不会污染全局。
+
+## TUI 可见性 —— 第一性原理：用户必须能看到 TUI
+
+`start_seat.py` 做两件事：
+1. `session start-engineer` — 建 tmux session，在里面启动 CLI
+2. `window open-engineer` — 打开 iTerm tab 并 attach 到这个 tmux session
+
+**第 2 步失败是 non-fatal**：tmux 在后台跑，但用户看不到任何 TUI 窗口。
+
+### 检查整个项目所有 seat 的可见性
+
+```bash
+python3 {{scripts}}/tui_ctl.py --profile <profile.toml 路径> status
+```
+
+输出示例：
+```
+Seat        Session                       Tool    Clients Content Status
+planner     install-planner-claude        claude  1       yes     VISIBLE
+builder-1   install-builder-1-claude      claude  0       no      RUNNING_NOT_VISIBLE
+reviewer-1  install-reviewer-1-codex      codex   1       yes     VISIBLE
+```
+
+`Status` 的四个值：
+- `VISIBLE` — session 活着且有 iTerm client attached，用户能看见 TUI ✅
+- `RUNNING_NOT_VISIBLE` — tmux 在跑但没 iTerm tab attach ❌ 需 recover
+- `NOT_RUNNING` — tmux session 根本不存在 ❌ 需重新 start_seat
+- `NO_SESSION_RECORD` — `~/.agents/sessions/.../session.toml` 都没生成 ❌ start_seat 彻底失败
+
+### 恢复 RUNNING_NOT_VISIBLE 的 seat
+
+```bash
+# 自动: 批量重开 iTerm 窗口给所有不可见 seat
+python3 {{scripts}}/tui_ctl.py --profile <profile> recover
+
+# 或者单个手动:
+python3 {{admin}} window open-engineer <seat> --project <project>
+
+# 或者重建整个项目窗口（一次性打开项目所有 seat 的 tabs）:
+python3 {{admin}} window open-monitor <project>
+```
+
+## 拉 seat 的唯一原则：**koder 自己拉，不委派给 planner**
+
+无论是安装期、补一个 seat、换一个 seat 的 provider、还是 planner 报 `seat_needed`，**都是你（koder）跑命令**，不派任务给 planner 让 planner 跑 `start_seat.py`。
+
+如果用户一次说"帮我把 planner / builder / reviewer / designer 都装起来"：
+- **每个 seat 单独问一次配置** —— 不要用"都用 claude oauth"偷懒；用户可能希望 builder 便宜、reviewer 严格、designer 走 gemini
+- 可以先问 "要不要为 N 个 seat 统一用同一套配置？"，用户同意才复用
+- **禁止**：自己定默认，跳过用户确认直接把 N 个全起了
+
+### 单 seat 启动（1 个 seat）
+
+```bash
+python3 {{scripts}}/start_seat.py \
+  --profile <profile.toml> \
+  --seat <seat> \
+  --tool <claude|codex|gemini> --auth-mode <oauth|api> --provider <...> \
+  --confirm-start
+```
+
+`start_seat.py` 一步到位：起 tmux + 开 iTerm tab + 做 TUI 可见性检查。
+
+### 多 seat 启动（一次 ≥2 seat）
+
+**直接用 `batch-start-engineer`**。这个子命令内部做了三件事：
+1. 用线程池并行 `start-engineer` 所有 seat（只起 tmux，不碰 iTerm）
+2. 等每个线程都返回（等价于 shell 的 `wait`，但强制不可省）
+3. 一次 `window open-monitor` 开所有 tab 到同一个 iTerm window（单次 AppleScript，无 race）
+
+```bash
+python3 {{admin}} session batch-start-engineer \
+  planner builder-1 reviewer-1 designer-1 \
+  --project <project>
+```
+
+可选：
+- `--no-iterm` — 只起 tmux，不开 iTerm（之后再手动 `window open-monitor`）
+- `--reset` — 已存在的 tmux session 先 kill 再重建
+
+特性：
+- **原子**：Phase 2 前拿到所有 Phase 1 结果；没起成的 seat → 整批失败 → **不**开残缺 iTerm window
+- **快 ~3x**：tmux 启动不走 iTerm，几乎瞬时
+- **视觉整齐**：所有 seat tab 排在同一 iTerm window 里
+- **无法遗漏 wait**：等 Phase 1 完成的逻辑写在 Python 里，不靠 shell `wait`
+
+前提（install-openclaw.toml 默认都满足）：
+- `project.window_mode = "tabs-1up"`
+- 目标 seat 都在 `monitor_engineers` 里
+
+koder 本身是 OpenClaw agent 不是 tmux seat，`open_project_tabs_window` 自动过滤，不会尝试给 koder 开 tab。
+
+### ⚠️ 不要手写 for-loop 的 shell 版本
+
+下面这个模式看着对，但**禁止**在 koder 里用：
+```bash
+# ❌ 错误：容易漏 wait
+for seat in ...; do
+  session start-engineer $seat &
+done
+window open-monitor ...    # 可能 Phase 1 还没完
+```
+
+漏 `wait` 时 `open-monitor` 会在 tmux session 还没建完时就发 AppleScript，`open_project_tabs_window` 内部 `tmux_has_session(seat)` 返回 False 就跳过该 seat → iTerm tab 漏开 → 用户以为 batch 模式不稳定。**统一走 `batch-start-engineer`**，Python 里保证顺序。
+
+### planner 报 seat_needed 怎么办
+
+planner 在 dispatch 过程中发现 specialist 没起，会给你发 `complete_handoff --status seat_needed --title 'seat_needed: <seat>'`。收到后：
+1. 问用户 "planner 需要 `<seat>` 跑 <task>，当前没起，你想给它配什么 CLI/auth/provider？"
+2. 用户确认 → 按上面"单 seat 启动"跑 `start_seat.py`
+3. Seat TUI 进入干净 prompt → 发 `notify_seat.py --target planner --title 'seat_ready: <seat>'` 让 planner 继续
+
+## 如果 pane 持续空白（CLI 启动失败）
+
+最常见原因：
+
+1. **provider 拼错**（`anthropix` vs `anthropic`、`minimaxi` vs `minimax`）
+   - 先 `query_memory.py --search provider` 找合法 provider 列表
+   - 检查 session.toml: `cat ~/.agents/sessions/<project>/<seat>/session.toml`
+2. **secret 文件缺失**（auth_mode=api 但没 seed key）
+   - 检查 `~/.agents/secrets/claude/<provider>/<seat>.env`
+   - 从 `~/.agents/.env.global` 或 peer seat 拷贝（这是 seat setup 的事，不是 koder 直接改）
+3. **tool binary 找不到**（claude / codex 没装）
+   - `command -v claude` / `command -v codex` 先确认
+
+修复后用 `--reset` 重建 tmux session：
+```bash
+python3 {{scripts}}/start_seat.py --profile <profile> --seat <X> \
+  --tool <X> --auth-mode <Y> --provider <Z> --confirm-start --reset
+```
