@@ -46,6 +46,5 @@ logs/
 credentials.json
 service-account*.json
 sessions/
-secrets/
-.secrets/
+private-config/
 .claude/settings.json
