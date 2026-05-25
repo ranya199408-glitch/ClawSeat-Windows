@@ -26,7 +26,7 @@ if (-not $ClawSeatRoot) {
 }
 
 $launcher = Join-Path $ClawSeatRoot "scripts\launch-windows.ps1"
-$argsList = @("-Project", $Project)
+$argsList = @("-Project", $Project, "-NoReset")
 if ($WslDistro) { $argsList += @("-WslDistro", $WslDistro) }
 if ($DryRun) { $argsList += "-DryRun" }
 

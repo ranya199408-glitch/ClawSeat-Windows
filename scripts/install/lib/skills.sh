@@ -97,7 +97,7 @@ install_skill_tier_for_home() {
   fi
 
   local -a core_skills=(clawseat-memory clawseat-decision-escalation)
-  local -a extended_skills=(clawseat-koder clawseat-privacy clawseat-memory-reporting clawseat-intake openclaw-feishu)
+  local -a extended_skills=(clawseat-koder clawseat-privacy clawseat-memory-reporting clawseat-intake openclaw-feishu wezterm-window reopen-wezterm-windows)
   local -a selected_skills=("${core_skills[@]}")
 
   if [[ "$tool" == "claude" || "$LOAD_ALL_SKILLS" == "1" ]]; then
